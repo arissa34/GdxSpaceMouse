@@ -2,7 +2,7 @@
 
 Java wrapper for the 3DConnexion SpaceMouse
 
-![ScreenShot](http://arissa34.github.io/GdxSpaceMouse/screens/spacemouse.png)
+![ScreenShot](https://github.com/arissa34/GdxSpaceMouse/blob/master/screens/spacemouse.png?raw=true)
 
 JniGen is used for the C++ code parser & library builder
 
