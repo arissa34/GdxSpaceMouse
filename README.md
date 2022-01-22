@@ -8,7 +8,9 @@ JniGen is used for the C++ code parser & library builder
 
 ## Requirements
 
-3DConnexion drive
+3DConnexion drivers :
+
+https://3dconnexion.com/us/drivers/
 
 ## License
 [Apache 2.0](https://choosealicense.com/licenses/apache-2.0/)
