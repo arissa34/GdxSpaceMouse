@@ -6,7 +6,7 @@ Java wrapper for the 3DConnexion SpaceMouse
 
 JniGen is used for the C++ code parser & library builder
 
-##Requirements
+## Requirements
 
 3DConnexion drive
 
