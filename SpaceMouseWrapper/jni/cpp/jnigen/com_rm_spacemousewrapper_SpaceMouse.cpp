@@ -1,6 +1,6 @@
 #include <com_rm_spacemousewrapper_SpaceMouse.h>
 
-//@line:59
+//@line:58
 
         #include <jni.h>
         #include <iostream>
@@ -23,7 +23,7 @@
      JNIEXPORT jboolean JNICALL Java_com_rm_spacemousewrapper_SpaceMouse_isDriverInstalled(JNIEnv* env, jclass clazz) {
 
 
-//@line:80
+//@line:83
 
         return SetConnexionHandlers != NULL;
     
@@ -33,7 +33,7 @@
 JNIEXPORT jint JNICALL Java_com_rm_spacemousewrapper_SpaceMouse_setConnexionHandlers(JNIEnv* env, jclass clazz, jobject spaceMouseOjb, jboolean useSeparateThread) {
 
 
-//@line:84
+//@line:97
 
 	    int error = env->GetJavaVM(&javaVM);
 	    if (error != 0) {
@@ -43,9 +43,8 @@ JNIEXPORT jint JNICALL Java_com_rm_spacemousewrapper_SpaceMouse_setConnexionHand
 	    jclass cls = env->GetObjectClass(spaceMouseOjb);
 	    onDeviceAddedJavaCallback = env->GetMethodID(cls, "onDeviceAdded", "(I)V");
 	    onDeviceRemovedJavaCallback = env->GetMethodID(cls, "onDeviceRemoved", "(I)V");
-	    onDeviceAxisChangedJavaCallback = env->GetMethodID(cls, "onDeviceAxisChanged", "([I)V");
-	    onDeviceAxisChangedJavaCallback = env->GetMethodID(cls, "onDeviceAxisChanged", "([I)V");
-	    onDeviceButtonChangedJavaCallback = env->GetMethodID(cls, "onDeviceButtonChanged", "(J)V");
+	    onDeviceAxisChangedJavaCallback = env->GetMethodID(cls, "onDeviceAxisChanged", "(I[I)V");
+	    onDeviceButtonChangedJavaCallback = env->GetMethodID(cls, "onDeviceButtonChanged", "(IJ)V");
 	    error = ConnexionControl(kConnexionCtlGetDeviceID, 0, &clientId);
         return SetConnexionHandlers(MyDeviceMessageHandler, MyDeviceAddedHandler, MyDeviceRemovedHandler, useSeparateThread);
     
@@ -55,7 +54,7 @@ JNIEXPORT jint JNICALL Java_com_rm_spacemousewrapper_SpaceMouse_setConnexionHand
 static inline jint wrapped_Java_com_rm_spacemousewrapper_SpaceMouse_registerConnexionClient
 (JNIEnv* env, jclass clazz, jint bundleSignature, jstring obj_applicationName, jint modeTakeOver, jlong mask, char* applicationName) {
 
-//@line:111
+//@line:123
 
         clientId = RegisterConnexionClient(bundleSignature, (uint8_t *) obj_applicationName, modeTakeOver, mask);
         return clientId;
@@ -75,7 +74,7 @@ JNIEXPORT jint JNICALL Java_com_rm_spacemousewrapper_SpaceMouse_registerConnexio
 JNIEXPORT void JNICALL Java_com_rm_spacemousewrapper_SpaceMouse_setConnexionClientMask(JNIEnv* env, jclass clazz, jint clientId, jlong mask) {
 
 
-//@line:116
+//@line:137
 
 	    SetConnexionClientButtonMask(clientId, mask);
     
@@ -85,7 +84,7 @@ JNIEXPORT void JNICALL Java_com_rm_spacemousewrapper_SpaceMouse_setConnexionClie
 JNIEXPORT void JNICALL Java_com_rm_spacemousewrapper_SpaceMouse_unregisterConnexionClient(JNIEnv* env, jclass clazz, jint clientId) {
 
 
-//@line:120
+//@line:145
 
         UnregisterConnexionClient(clientId);
         env->DeleteGlobalRef(spaceMouseObject);
@@ -97,7 +96,7 @@ JNIEXPORT void JNICALL Java_com_rm_spacemousewrapper_SpaceMouse_unregisterConnex
 JNIEXPORT void JNICALL Java_com_rm_spacemousewrapper_SpaceMouse_cleanUpConnexionHandler(JNIEnv* env, jclass clazz) {
 
 
-//@line:126
+//@line:154
 
         CleanupConnexionHandlers();
     
@@ -105,11 +104,11 @@ JNIEXPORT void JNICALL Java_com_rm_spacemousewrapper_SpaceMouse_cleanUpConnexion
 }
 
 
-//@line:130
+//@line:158
+
 
         JNIEnv * getEnvAndCheckVersion(){
             JNIEnv *env;
-            // double check it's all ok
             int getEnvStat = javaVM->GetEnv((void **)&env, JNI_VERSION_1_8);
             if (getEnvStat == JNI_EDETACHED) {
                 std::cout << "GetEnv: not attached" << std::endl;
@@ -141,9 +140,8 @@ JNIEXPORT void JNICALL Java_com_rm_spacemousewrapper_SpaceMouse_cleanUpConnexion
                         // decipher what command/event is being reported by the driver
                         switch (state->command) {
 
-
 				            case kConnexionCmdHandleButtons:
-				            	env->CallVoidMethod(spaceMouseObject, onDeviceButtonChangedJavaCallback, state->buttons);
+				            	env->CallVoidMethod(spaceMouseObject, onDeviceButtonChangedJavaCallback, connection, state->buttons);
 				            	break;
 
                             case kConnexionCmdHandleAxis:
@@ -153,7 +151,7 @@ JNIEXPORT void JNICALL Java_com_rm_spacemousewrapper_SpaceMouse_cleanUpConnexion
 	                            	data[i] = state->axis[i];
 	                            }
 	                            env->SetIntArrayRegion(intarray, 0, NBR_OF_AXIS, data);
-                                env->CallVoidMethod(spaceMouseObject, onDeviceAxisChangedJavaCallback,  intarray);
+                                env->CallVoidMethod(spaceMouseObject, onDeviceAxisChangedJavaCallback, connection, intarray);
                                 break;
                          }
                     }
@@ -178,13 +176,5 @@ JNIEXPORT void JNICALL Java_com_rm_spacemousewrapper_SpaceMouse_cleanUpConnexion
 	        if (env != NULL) {
 	        	env->CallVoidMethod(spaceMouseObject, onDeviceRemovedJavaCallback, connection);
 	        }
-        }
-
-        void cstr2pstr(const char *cstr, char *pstr) {
-        	int i;
-        	for (i = 0; cstr[i]; i++) {
-        		pstr[i + 1] = cstr[i];
-        	}
-        	pstr[0] = i;
         }
      

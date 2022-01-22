@@ -5,10 +5,10 @@ import java.util.List;
 
 public class SpaceMouse extends AbsLoader{
 
-    private List<SpaceMouseDeviceListener> deviceListeners = new ArrayList<>();
+    private final List<SpaceMouseDeviceListener> deviceListeners;
 
     public SpaceMouse(){
-
+        deviceListeners = new ArrayList<>();
     }
 
     public void addDeviceListeners(SpaceMouseDeviceListener listener) {
@@ -27,12 +27,12 @@ public class SpaceMouse extends AbsLoader{
         deviceListeners.forEach(l -> l.deviceRemoved(deviceID));
     }
 
-    public void onDeviceAxisChanged(int[] data) {
-        deviceListeners.forEach(l -> l.axisChanged(data));
+    public void onDeviceAxisChanged(int deviceId, int[] data) {
+        deviceListeners.forEach(l -> l.axisChanged(deviceId, data));
     }
 
-    public void onDeviceButtonChanged(long button) {
-        deviceListeners.forEach(l -> l.buttonChanged(SpaceMouseButtonState.values()[(int)button]));
+    public void onDeviceButtonChanged(int deviceId, long button) {
+        deviceListeners.forEach(l -> l.buttonChanged(deviceId, SpaceMouseButtonState.values()[(int)button]));
     }
 
     public void start(String appName, boolean useSeparateThread) throws Exception {
@@ -50,6 +50,7 @@ public class SpaceMouse extends AbsLoader{
 
     @Override
     public void close(){
+        deviceListeners.clear();
         unregisterConnexionClient(clientId);
         cleanUpConnexionHandler();
     }
@@ -75,10 +76,24 @@ public class SpaceMouse extends AbsLoader{
         JNIEnv * getEnvAndCheckVersion();
      */
 
+    /**
+     * Check if the driver is installed
+     * @return if the driver has found
+     */
     private static native boolean isDriverInstalled();/*
         return SetConnexionHandlers != NULL;
     */
 
+    /**
+     * Registers your callback functions and lets you select if the events get processed in a separate thread.
+     *
+     * @param spaceMouseOjb instance of this class
+     * @param useSeparateThread A bool value. If set to true, all 3D Mouse events are processed
+     *                          in a separate thread. In that case make sure that you use thread-safe
+     *                          calls within the callback, when exchanging data between or calling into
+     *                          other threads!
+     * @return
+     */
     public static native int setConnexionHandlers(SpaceMouse spaceMouseOjb, boolean useSeparateThread);/*
 	    int error = env->GetJavaVM(&javaVM);
 	    if (error != 0) {
@@ -88,9 +103,8 @@ public class SpaceMouse extends AbsLoader{
 	    jclass cls = env->GetObjectClass(spaceMouseOjb);
 	    onDeviceAddedJavaCallback = env->GetMethodID(cls, "onDeviceAdded", "(I)V");
 	    onDeviceRemovedJavaCallback = env->GetMethodID(cls, "onDeviceRemoved", "(I)V");
-	    onDeviceAxisChangedJavaCallback = env->GetMethodID(cls, "onDeviceAxisChanged", "([I)V");
-	    onDeviceAxisChangedJavaCallback = env->GetMethodID(cls, "onDeviceAxisChanged", "([I)V");
-	    onDeviceButtonChangedJavaCallback = env->GetMethodID(cls, "onDeviceButtonChanged", "(J)V");
+	    onDeviceAxisChangedJavaCallback = env->GetMethodID(cls, "onDeviceAxisChanged", "(I[I)V");
+	    onDeviceButtonChangedJavaCallback = env->GetMethodID(cls, "onDeviceButtonChanged", "(IJ)V");
 	    error = ConnexionControl(kConnexionCtlGetDeviceID, 0, &clientId);
         return SetConnexionHandlers(MyDeviceMessageHandler, MyDeviceAddedHandler, MyDeviceRemovedHandler, useSeparateThread);
     */
@@ -111,16 +125,32 @@ public class SpaceMouse extends AbsLoader{
         return clientId;
     */
 
+    /**
+     * Sets the capability mask bits your application will handle
+     *
+     * @param clientId ID returned from a call to RegisterConnexionClient.
+     * @param mask Specify what device events, buttons or axis motion,
+     *            are to be sent to your application. This is a 32-bit
+     *             value that can be OR’d together. See ConnexionClient.h
+     *             for a list of the capability mask constants.
+     */
     private static native void setConnexionClientMask(int clientId, long mask);/*
 	    SetConnexionClientButtonMask(clientId, mask);
     */
 
+    /**
+     * Unregisters your application from the driver
+     * @param clientId ID returned from a call to RegisterConnexionClient.
+     */
     private static native void unregisterConnexionClient(int clientId);/*
         UnregisterConnexionClient(clientId);
         env->DeleteGlobalRef(spaceMouseObject);
 	    clientId = 0;
     */
 
+    /**
+     * Unregisters your callback functions
+     */
     private static native void cleanUpConnexionHandler();/*
         CleanupConnexionHandlers();
     */
@@ -161,7 +191,7 @@ public class SpaceMouse extends AbsLoader{
                         switch (state->command) {
 
 				            case kConnexionCmdHandleButtons:
-				            	env->CallVoidMethod(spaceMouseObject, onDeviceButtonChangedJavaCallback, state->buttons);
+				            	env->CallVoidMethod(spaceMouseObject, onDeviceButtonChangedJavaCallback, connection, state->buttons);
 				            	break;
 
                             case kConnexionCmdHandleAxis:
@@ -171,7 +201,7 @@ public class SpaceMouse extends AbsLoader{
 	                            	data[i] = state->axis[i];
 	                            }
 	                            env->SetIntArrayRegion(intarray, 0, NBR_OF_AXIS, data);
-                                env->CallVoidMethod(spaceMouseObject, onDeviceAxisChangedJavaCallback,  intarray);
+                                env->CallVoidMethod(spaceMouseObject, onDeviceAxisChangedJavaCallback, connection, intarray);
                                 break;
                          }
                     }

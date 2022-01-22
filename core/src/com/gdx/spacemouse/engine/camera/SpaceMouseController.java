@@ -9,6 +9,7 @@ import com.rm.spacemousewrapper.SpaceMouseDeviceListener;
 public class SpaceMouseController extends AbsController implements SpaceMouseDeviceListener {
 
     private final SpaceMouse spaceMouse;
+    private int spaceMouseId = -1;
 
     public Vector3 rightCam = new Vector3();
 
@@ -32,17 +33,22 @@ public class SpaceMouseController extends AbsController implements SpaceMouseDev
     @Override
     public void deviceAdded(int deviceId) {
         Gdx.app.log(this.getClass().getSimpleName(), "===> deviceAdded : "+deviceId);
+        if(spaceMouseId == -1)
+            spaceMouseId = deviceId;
     }
 
     @Override
     public void deviceRemoved(int deviceId) {
         Gdx.app.log(this.getClass().getSimpleName(), "===> deviceRemoved : "+deviceId);
+        if(spaceMouseId == deviceId)
+            spaceMouseId = -1;
     }
 
     float factorT = 600;
     float factorR = 100;
     @Override
-    public void axisChanged(int[] values) {
+    public void axisChanged(int deviceId, int[] values) {
+        if(spaceMouseId != deviceId) return;
 
         camera.targetPosition.mulAdd(camera.targetUp, (-values[2]/factorT));
         camera.targetPosition.mulAdd(camera.targetDirection, (values[1]/factorT));
@@ -72,8 +78,10 @@ public class SpaceMouseController extends AbsController implements SpaceMouseDev
     }
 
     @Override
-    public void buttonChanged(SpaceMouseButtonState event) {
+    public void buttonChanged(int deviceId, SpaceMouseButtonState event) {
+        if(spaceMouseId != deviceId) return;
 
+        Gdx.app.log(this.getClass().getSimpleName(), "===> SpaceMouse "+deviceId+" ; buttonChanged : "+event);
     }
 
     @Override
