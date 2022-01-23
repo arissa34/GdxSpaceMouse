@@ -10,6 +10,7 @@ public class SpaceMouseController extends AbsController implements SpaceMouseDev
 
     private final SpaceMouse spaceMouse;
     private int spaceMouseId = -1;
+    private int inverseAxis = 1;
 
     public Vector3 rightCam = new Vector3();
 
@@ -23,6 +24,11 @@ public class SpaceMouseController extends AbsController implements SpaceMouseDev
         } catch (Exception e) {
             e.printStackTrace();
         }
+        inverseAxis();
+    }
+
+    public void inverseAxis(){
+        inverseAxis = -1;
     }
 
     @Override
@@ -50,13 +56,13 @@ public class SpaceMouseController extends AbsController implements SpaceMouseDev
     public void axisChanged(int deviceId, int[] values) {
         if(spaceMouseId != deviceId) return;
 
-        camera.targetPosition.mulAdd(camera.targetUp, (-values[2]/factorT));
-        camera.targetPosition.mulAdd(camera.targetDirection, (values[1]/factorT));
-        camera.targetPosition.mulAdd(rightCam, (values[0]/factorT));
+        camera.targetPosition.mulAdd(camera.targetUp, (values[2]/factorT) * inverseAxis);
+        camera.targetPosition.mulAdd(camera.targetDirection, (values[1]/factorT) * inverseAxis);
+        camera.targetPosition.mulAdd(rightCam, (values[0]/factorT) * inverseAxis);
 
-        rotateAround(camera.targetPosition, camera.targetUp, -(values[5]/factorR));
-        rotateAround(camera.targetPosition, rightCam, (values[3]/factorR));
-        rotateAround(camera.targetPosition, camera.targetDirection, (values[4]/factorR));
+        rotateAround(camera.targetPosition, camera.targetUp, (values[5]/factorR) * inverseAxis);
+        rotateAround(camera.targetPosition, rightCam, (values[3]/factorR) * inverseAxis);
+        rotateAround(camera.targetPosition, camera.targetDirection, (values[4]/factorR) * inverseAxis);
 
         camera.normalizeTargetUp();
     }
