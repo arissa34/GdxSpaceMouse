@@ -50,8 +50,8 @@ public class SpaceMouseController extends AbsController implements SpaceMouseDev
             spaceMouseId = -1;
     }
 
-    float factorT = 600;
-    float factorR = 100;
+    float factorT = 800;
+    float factorR = 150;
     @Override
     public void axisChanged(int deviceId, int[] values) {
         if(spaceMouseId != deviceId) return;

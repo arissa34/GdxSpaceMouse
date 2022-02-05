@@ -6,8 +6,12 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 jar { // for building the spacemouse fat jar with native lib inside
-    into('libs') {
-        from 'libs'
+    into('') {
+        from 'libs/macosx64'
     }
+    exclude('MacBuilder.class')
 }
 
+tasks.withType(Jar) {
+    destinationDirectory.set(file("$buildDir/../libs"))
+}
