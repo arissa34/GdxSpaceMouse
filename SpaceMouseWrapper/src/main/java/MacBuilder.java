@@ -46,6 +46,9 @@ public class MacBuilder {
         String cppFlags = "";
 
         BuildConfig buildConfig = new BuildConfig(libName, "../build/tmp/3Dx/target", "libs", "jni");
+        buildConfig.sharedLibs = new String[]{
+                "../build/classes/java/main"
+        };
 
         BuildTarget mac64 = BuildTarget.newDefaultTarget(BuildTarget.TargetOs.MacOsX, true, false);
         mac64.cCompiler = "ccache_clang"; // I used this trick : https://github.com/libgdx/libgdx/wiki/jnigen#ccache
@@ -65,7 +68,7 @@ public class MacBuilder {
             throw new RuntimeException("Failure to execute mac ant.");
         }
 
-        boolean antExecutionStatus = BuildExecutor.executeAnt("jni/build.xml", "-v", "clean", "pack-natives");
+        boolean antExecutionStatus = BuildExecutor.executeAnt("jni/build.xml", "-v", "pack-natives");
         if (!antExecutionStatus) {
             throw new RuntimeException("Failure to execute ant.");
         }

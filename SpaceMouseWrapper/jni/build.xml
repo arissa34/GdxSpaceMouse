@@ -10,6 +10,7 @@
 	<target name="pack-natives">
 		<jar destfile="../libs/3Dx-natives.jar">
 			<fileset dir="../libs/macosx64" includes="lib3Dx64.dylib"/>
+			<fileset dir="../build/classes/java/main"/>
 
 		</jar>
 	</target>
